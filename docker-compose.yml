@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  db:
+    container_name: database
+    image: postgres
+    restart: always
+    ports:
+      - "5433:5433"
+      - "5432:5432"
+
+    env_file:
+      - ".env"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  adminer:
+    links:
+      - "db:database"
+    container_name: adminer
+    image: adminer
+    restart: always
+    environment:
+      host: $DB_HOST
+    ports:
+      - 8080:8080
+
+  api-server:
+    links:
+      - "db:database"
+    container_name: api-server
+    build:
+      context: .
+    restart: always
+    env_file:
+      - ".env"
+    depends_on:
+      - db
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "80:80"
+
+
+volumes:
+  db-data:
