@@ -33,23 +33,23 @@ class ImportsView(BaseView):
     need_to_add_history = None
 
     @classmethod
-    def make_shop_units_table_rows(cls, shop_units: list[dict], date: str) -> Generator:
+    def make_units_table_rows(cls, units: list[dict], date: str) -> Generator:
         """
-        :param shop_units: список элементов для вставки
+        :param units: список элементов для вставки
         :param date: дата обновления
         :return: Generator
 
-        Метод, который генерирует данные готовые для вставки в таблицу shop_units
+        Метод, который генерирует данные готовые для вставки в таблицу units
         """
 
-        for shop_unit in shop_units:
+        for unit in units:
             yield {
-                'shop_unit_id': shop_unit['id'],
-                'name': shop_unit['name'],
+                'uid': unit['id'],
+                'url': unit.get('url'),
+                'size': unit.get('size'),
                 'date': str_to_datetime(date),
-                'type': shop_unit['type'].lower(),
-                'parent_id': shop_unit.get('parentId'),
-                'price': shop_unit.get('price'),
+                'type': unit['type'].lower(),
+                'parent_id': unit.get('parentId'),
             }
 
     @classmethod
@@ -61,12 +61,12 @@ class ImportsView(BaseView):
         Метод, который генерирует данные готовые для вставки в таблицу relations
         """
 
-        for shop_unit in relations:
-            if not shop_unit.get('parentId'):
+        for unit in relations:
+            if not unit.get('parentId'):
                 continue
             yield {
-                'children_id': shop_unit['id'],
-                'relation_id': shop_unit['parentId'],
+                'children_id': unit['id'],
+                'relation_id': unit['parentId'],
             }
 
     @staticmethod
@@ -90,7 +90,7 @@ class ImportsView(BaseView):
         :param chunk список элементов для вставки
         :return: None
 
-        Метод, который вставляет данные в таблицу shop_units
+        Метод, который вставляет данные в таблицу units
         """
 
         parents = set()
@@ -99,13 +99,13 @@ class ImportsView(BaseView):
         for data in chunk:
             if data.get('parent_id'):
                 parents.add(data.get('parent_id'))
-            all_objects[data.get('shop_unit_id')] = data.copy()
+            all_objects[data.get('uid')] = data.copy()
 
-        # проверяем, что родитель есть в бд и что его тип == 'category'
+        # проверяем, что родитель есть в бд и что его тип == 'folder'
         if parents:
             for parent in await self.pg.fetch(SQL_REQUESTS['get_by_ides'].format(tuple(parents)).replace(',)', ')')):
-                assert parent is not None and parent.get('type').lower() == 'category', \
-                    f'Incorrect parent with id {parent.get("shop_unit_id")} (Not found in db or type is OFFER)'
+                assert parent is not None and parent.get('type').lower() == 'folder', \
+                    f'Incorrect parent with id {parent.get("uid")} (Not found in db or type is FILE)'
 
         for data in chunk:
 
@@ -115,18 +115,17 @@ class ImportsView(BaseView):
             # второй для добавления записи в таблицу истории изменений (статистики)
 
             if data.get('parent_id'):
-                self.need_to_update_date.append((data['shop_unit_id'], data['date']))
-            if data.get('type').lower() == 'offer':
-                self.need_to_add_history.append((data['shop_unit_id'], data['date']))
+                self.need_to_update_date.append((data['uid'], data['date']))
+            if data.get('type').lower() == 'file':
+                self.need_to_add_history.append((data['uid'], data['date']))
 
         # добавляем объекты, которых еще нет в бд
-        insert_query = insert(units_table).values(list(all_objects.values())).on_conflict_do_update(
-            index_elements=['shop_unit_id'],
-            set_=units_table.columns
-        )
-        insert_query.parameters = []
-
-        await conn.execute(insert_query)
+        for obj in all_objects.values():
+            insert_query = insert(units_table).values(**obj).on_conflict_do_update(
+                index_elements=['uid'], set_=obj
+            )
+            insert_query.parameters = []
+            await conn.execute(insert_query)
 
     @docs(summary='Добавить выгрузку с информацией о товарах/категориях')
     @request_schema(ImportSchema())
@@ -143,17 +142,19 @@ class ImportsView(BaseView):
             async with self.pg.transaction() as conn:
 
                 data = await self.request.json()
+
                 assert data.get('items') and data.get('updateDate')
-                shop_units = data['items']
+                units = data['items']
 
                 chunked_shop_unit_rows = list(
                     chunk_list(
-                        self.make_shop_units_table_rows(shop_units, data['updateDate']), self.MAX_CITIZENS_PER_INSERT
+                        self.make_units_table_rows(units, data['updateDate']), self.MAX_CITIZENS_PER_INSERT
                     )
                 )
+
                 relations_rows = list(
                     chunk_list(
-                        self.make_relations_table_rows(shop_units), self.MAX_CITIZENS_PER_INSERT
+                        self.make_relations_table_rows(units), self.MAX_CITIZENS_PER_INSERT
                     )
                 )
 
@@ -171,4 +172,7 @@ class ImportsView(BaseView):
 
             return Response(status=HTTPStatus.OK)
         except (AssertionError, ValueError) as err:
+
+            print(err, type(err))
+
             return Response(body=str(err), status=HTTPStatus.BAD_REQUEST)

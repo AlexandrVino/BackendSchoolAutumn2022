@@ -13,7 +13,7 @@ from disk.api.handlers.base import BaseImportView
 
 
 class SalesView(BaseImportView):
-    URL_PATH = r'/sales'
+    URL_PATH = r'/updates'
 
     @docs(summary='Отобразить товары со скидкой')
     async def get(self) -> Response:
@@ -23,15 +23,16 @@ class SalesView(BaseImportView):
         """
 
         try:
-            date = str_to_datetime(parse_qs(urlparse(unquote(str(self.request.url))).query)['date'][0])
+            date = str_to_datetime(self.kwargs['date'][0])
+
         except (ValueError, KeyError):
             return Response(status=HTTPStatus.BAD_REQUEST)
 
         sql_request = units_table.select().where(
             and_(
-                units_table.c.type == 'offer',
-                units_table.c.shop_unit_id.in_(
-                    select(history_table.c.shop_unit_id).where(
+                units_table.c.type == 'file',
+                units_table.c.uid.in_(
+                    select(history_table.c.uid).where(
                         and_(
                             history_table.c.update_date >= date - timedelta(days=1),
                             history_table.c.update_date <= date,

@@ -29,7 +29,7 @@ def create_app(args: Namespace) -> Application:
 
     # Регистрация обработчиков
     for handler in HANDLERS:
-        log.debug('Registering handler %r as %r', handler, handler.URL_PATH)
+        log.info('Registering handler %r as %r', handler, handler.URL_PATH)
         app.router.add_route('*', handler.URL_PATH, handler)
 
     PAYLOAD_REGISTRY.register(AsyncGenJSONListPayload, (AsyncGeneratorType, AsyncIterable))

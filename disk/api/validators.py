@@ -1,4 +1,4 @@
-def validate_category(kwargs):
+def validate_folder(kwargs):
     """
     :param kwargs: словарь
     :return: None
@@ -7,13 +7,13 @@ def validate_category(kwargs):
     """
 
     keys = [
-        ('shop_unit_id', (1,)), ('name', (1,)), ('date', (1,)), ('parentId', (0, 1)), ('type', (1,)), ('price', (0,))
+        ('uid', (1,)), ('date', (1,)), ('parentId', (0, 1)), ('type', (1,)), ('size', (0,))
     ]
     for key, value in keys:
         assert bool(kwargs.get(key)) in value, 'Validation failed'
 
 
-def validate_product(kwargs):
+def validate_file(kwargs):
     """
     :param kwargs: словарь
     :return: None
@@ -22,7 +22,7 @@ def validate_product(kwargs):
     """
 
     keys = [
-        ('shop_unit_id', (1,)), ('name', (1,)), ('date', (1,)), ('parentId', (0, 1)), ('type', (1,)), ('price', (1,))
+        ('uid', (1,)), ('url', (1,)), ('date', (1,)), ('parentId', (0, 1)), ('type', (1,)), ('size', (1,))
     ]
     for key, value in keys:
         if key == 'price':
@@ -39,8 +39,8 @@ def validate_all_items(items: iter):
     """
 
     funcs = {
-        'category': validate_category,
-        'offer': validate_product,
+        'folder': validate_folder,
+        'file': validate_file,
     }
 
     for item in items:

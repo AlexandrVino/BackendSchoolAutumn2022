@@ -18,13 +18,10 @@ from disk.utils.pg import MAX_QUERY_ARGS
 '''
 
 SQL_REQUESTS = {
-    'get_by_ides': '''
-        SELECT shop_units.shop_unit_id, shop_units.name, shop_units.date, shop_units.parent_id, shop_units.type, shop_units.price 
-        FROM shop_units 
-        WHERE shop_units.shop_unit_id IN {}''',
+    'get_by_ides': '''        SELECT * FROM units WHERE units.uid IN {}''',
     'delete_by_ides': '''
-    DELETE FROM public.history WHERE shop_unit_id IN {};
-    DELETE FROM public.shop_units WHERE shop_unit_id IN {};
+    DELETE FROM public.history WHERE uid IN {};
+    DELETE FROM public.units WHERE uid IN {};
     DELETE FROM public.relations WHERE children_id IN {} OR relation_id IN {};''',
     'get_item_tree': '''
     WITH RECURSIVE search_tree(relation_id, children_id) AS (
@@ -47,9 +44,9 @@ SQL_REQUESTS = {
     )
     SELECT * FROM search_tree;''',
     'update_date': '''
-    UPDATE shop_units 
+    UPDATE units 
     SET date = '{}'
-    WHERE shop_units.shop_unit_id IN {}''',
+    WHERE units.uid IN {}''',
 }
 
 
@@ -94,7 +91,7 @@ async def build_tree_json(ans: dict, data: list[Record], records: dict[str: dict
 
         for index, record in enumerate(data):
             parent_id, children_id = record.get('relation_id'), record.get('children_id')
-            if parent_id != ans['shop_unit_id']:
+            if parent_id != ans['uid']:
                 continue
 
             any_children_in_data = False
@@ -110,7 +107,7 @@ async def build_tree_json(ans: dict, data: list[Record], records: dict[str: dict
             break
 
 
-async def get_total_price(tree: dict) -> tuple[int, int] | None:
+async def get_total_size(tree: dict) -> int | None:
     """
     :param tree: дерево элементов
     :return: либо цену и кол-во дочерних элементов (для рекурсии), либо None
@@ -118,27 +115,28 @@ async def get_total_price(tree: dict) -> tuple[int, int] | None:
     Функция, считающая и добавляющая цены категории
     """
 
-    price = tree.get('price') or 0
-    count = 0
+    size = tree.get('size') or 0
 
     if tree.get('children'):
         for item in tree['children']:
             if item.get('children'):
 
-                local_price, local_count = await get_total_price(item)
-                item['price'] = local_price // local_count
-                price += local_price
-                count += local_count
+                local_size = await get_total_size(item)
+                item['size'] = local_size
+                size += local_size
+
             else:
                 item['children'] = None
-                price += 0 if item.get('price') is None else item.get('price')
-                count += 1
+                size += 0 if item.get('size') is None else item.get('size')
+
             item['date'] = datetime_to_str(item['date'])
-        tree['price'] = price // count
+
+        tree['size'] = size
     else:
         tree['date'] = datetime_to_str(tree['date'])
         tree['children'] = None
-    return price, count or 1
+
+    return size
 
 
 async def edit_json_to_answer(data: dict | list) -> dict:
@@ -149,32 +147,32 @@ async def edit_json_to_answer(data: dict | list) -> dict:
     Функция изменения данных для ответа
     """
     return json.loads(
-        json.dumps(data, ensure_ascii=False).replace('category', 'CATEGORY').replace('offer', 'OFFER')
-        .replace('shop_unit_id', 'id').replace('parent_id', 'parentId')
+        json.dumps(data, ensure_ascii=False).replace('"file"', '"FILE"').replace('"folder"', '"FOLDER"')
+        .replace('uid', 'id').replace('parent_id', 'parentId')
     )
 
 
-async def get_obj_tree_by_id(shop_unit_id: str, pg: PG) -> dict:
+async def get_obj_tree_by_id(uid: str, pg: PG) -> dict:
     """
-    :param shop_unit_id: id элемента, для которого надо создать дерево
+    :param uid: id элемента, для которого надо создать дерево
     :param pg: PG объект коннекта к базе данных
     :return: json, готовый к отправке на клиент
 
     Функция, возвращающая json, готовый к отправке на клиент
     """
 
-    ides_to_req, ides = await get_item_tree(shop_unit_id, pg)
+    ides_to_req, ides = await get_item_tree(uid, pg)
     if not ides_to_req:
         raise HTTPNotFound()
 
     sql_request = SQL_REQUESTS['get_by_ides'].format(tuple(ides_to_req)).replace(',)', ')')
     records = await pg.fetch(sql_request)
-    records = {record.get('shop_unit_id'): dict(record) for record in records}
-    ans = records.get(shop_unit_id)
+    records = {record.get('uid'): dict(record) for record in records}
+    ans = records.get(uid)
     ans['date'] = datetime_to_str(ans['date'])
 
     await build_tree_json(ans, ides, records)
-    await get_total_price(ans)
+    await get_total_size(ans)
 
     return await edit_json_to_answer(ans)
 
@@ -193,7 +191,7 @@ async def get_history(obj_tree: dict, update_date: datetime, ides: list, data: d
     record = ides.pop(0)
     parent_id, children_id = record.get('relation_id'), record.get('children_id')
     data[parent_id] = {
-        'price': obj_tree['price'],
+        'size': obj_tree['size'],
         'date': update_date
     }
 
@@ -202,7 +200,7 @@ async def get_history(obj_tree: dict, update_date: datetime, ides: list, data: d
             continue
         if not ides:
             data[children_id] = {
-                'price': children['price'],
+                'size': children['size'],
                 'date': update_date
             }
         else:
@@ -221,19 +219,19 @@ async def get_parent_brunch_ides(children_id: str, pg: PG) -> list[Record]:
     return await pg.fetch(SQL_REQUESTS['get_parent_brunch'].format(children_id))
 
 
-def get_history_table_chunk(prices: dict) -> None:
+def get_history_table_chunk(sizes: dict) -> None:
     """
-    :param prices: Словарь со входными данными
+    :param sizes: Словарь со входными данными
     :return: None
 
     Функция генерации данных для записи в таблицу историй
     """
 
-    for obj_id, obj_data in prices.items():
+    for obj_id, obj_data in sizes.items():
         yield {
-            'shop_unit_id': obj_id,
+            'uid': obj_id,
             'update_date': obj_data.get('date'),
-            'price': obj_data.get('price'),
+            'size': obj_data.get('size'),
         }
 
 
@@ -252,18 +250,18 @@ async def add_history(children_id: str, pg: PG, update_date: datetime, main_pare
     main_parent_id = ides and ides[-1].get('relation_id')
 
     if main_parents_trees.get(main_parent_id) is None:
-        prices = {}
+        sizes = {}
         main_parent_tree = await get_obj_tree_by_id(main_parent_id or children_id, pg)
-        await get_history(main_parent_tree, update_date, ides[::-1], prices)
+        await get_history(main_parent_tree, update_date, ides[::-1], sizes)
 
-        main_parents_trees[main_parent_id] = [main_parent_tree, prices]
+        main_parents_trees[main_parent_id] = [main_parent_tree, sizes]
 
         sql_request = insert(history_table).on_conflict_do_nothing(
-            index_elements=['shop_unit_id', 'update_date']
+            index_elements=['uid', 'update_date']
         )
         sql_request.parameters = []
 
-        history_rows = list(chunk_list(get_history_table_chunk(prices), MAX_QUERY_ARGS // 3))
+        history_rows = list(chunk_list(get_history_table_chunk(sizes), MAX_QUERY_ARGS // 3))
         for chunk in history_rows:
             await pg.execute(sql_request.values(chunk))
 
@@ -284,8 +282,9 @@ async def update_parent_branch_date(children_id: str, pg: PG, update_date: datet
     for record in ides:
         ides_to_req.update((record.get('relation_id'), record.get('children_id')))
 
-    sql_request = SQL_REQUESTS['update_date'].format(update_date, tuple(ides_to_req))
-    await pg.execute(sql_request)
+    if ides_to_req:
+        sql_request = SQL_REQUESTS['update_date'].format(update_date, tuple(ides_to_req))
+        await pg.execute(sql_request)
 
 
 def datetime_to_str(date: datetime) -> str:
@@ -296,7 +295,7 @@ def datetime_to_str(date: datetime) -> str:
     Функция перевода datetime объект в строку
     """
 
-    return date.strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + 'Z'
+    return date.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def str_to_datetime(date: str) -> datetime:
@@ -307,4 +306,14 @@ def str_to_datetime(date: str) -> datetime:
     Функция перевода строки в datetime объект
     """
 
-    return datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ")
+    return datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ")
+
+
+async def prepare_answer(tree: dict):
+    if tree.get('children'):
+        for item in tree.get('children'):
+            await prepare_answer(item)
+
+    if tree.get('parent_id'):
+        tree['parentId'] = tree['parent_id']
+        del tree['parent_id']

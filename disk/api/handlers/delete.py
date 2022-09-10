@@ -9,7 +9,7 @@ from disk.api.handlers.base import BaseImportView
 
 
 class DeleteView(BaseImportView):
-    URL_PATH = r'/delete/{shop_unit_id:[\w, -]+}'
+    URL_PATH = r'/delete/{uid:[\w, -]+}'
 
     @docs(summary='Получить объект со всеми дочерними')
     async def delete(self) -> Response:
@@ -18,7 +18,7 @@ class DeleteView(BaseImportView):
         Метод удаления элемента с каким-либо id из всех таблиц
         """
 
-        ides_to_req, _ = await get_item_tree(self.shop_unit_id, self.pg)
+        ides_to_req, _ = await get_item_tree(self.uid, self.pg)
         if not ides_to_req:
             raise HTTPNotFound()
         ides_to_req = tuple(ides_to_req)

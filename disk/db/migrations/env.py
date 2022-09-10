@@ -8,9 +8,7 @@ from sqlalchemy import pool
 
 from alembic import context
 
-
 from disk.db import schema
-
 
 dotenv_path = f'{os.getcwd()}/.env'
 if os.path.exists(dotenv_path):

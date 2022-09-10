@@ -1,4 +1,5 @@
 import logging
+from urllib.parse import parse_qs, unquote, urlparse
 
 from aiohttp.web_urldispatcher import View
 from asyncpgsa import PG
@@ -30,12 +31,16 @@ class BaseImportView(BaseView):
     """
 
     @property
-    def shop_unit_id(self) -> str:
-        return str(self.request.match_info.get('shop_unit_id'))
+    def uid(self) -> str:
+        return str(self.request.match_info.get('uid'))
+
+    @property
+    def kwargs(self) -> dict:
+        return parse_qs(urlparse(unquote(str(self.request.url))).query)
 
     async def get_obj_tree(self) -> dict:
         """
         :return: dict - дерево, в котором текущий является корнем
         """
 
-        return await get_obj_tree_by_id(self.shop_unit_id, self.pg)
+        return await get_obj_tree_by_id(self.uid, self.pg)

@@ -12,7 +12,7 @@ from disk.api.handlers.base import BaseImportView
 
 
 class StatsView(BaseImportView):
-    URL_PATH = r'/node/{shop_unit_id:[\w, -]+}/statistic'
+    URL_PATH = r'/node/{uid:[\w, -]+}/history'
 
     @docs(summary='Отобразить историю изменения товара')
     async def get(self) -> Response:
@@ -21,12 +21,9 @@ class StatsView(BaseImportView):
         Метод получения истории изменений элемента, цена которых менялась с date_start до date_end
         """
 
-        # парсим url
-        kwargs = parse_qs(urlparse(unquote(str(self.request.url))).query)
-
         try:
-            date_end = str_to_datetime(kwargs['dateEnd'][0])
-            date_start = str_to_datetime(kwargs['dateStart'][0])
+            date_end = str_to_datetime(self.kwargs['dateEnd'][0])
+            date_start = str_to_datetime(self.kwargs['dateStart'][0])
         except (ValueError, KeyError):
             return Response(status=HTTPStatus.BAD_REQUEST)
 
@@ -35,20 +32,20 @@ class StatsView(BaseImportView):
             and_(
                 date_start <= history_table.c.update_date,
                 history_table.c.update_date <= date_end,
-                history_table.c.shop_unit_id == self.shop_unit_id
+                history_table.c.uid == self.uid
             )
         )
 
-        prices = [[record.get('price'), record.get('update_date')] for record in await self.pg.fetch(sql_request)]
+        sizes = [[record.get('size'), record.get('update_date')] for record in await self.pg.fetch(sql_request)]
 
         # получаем сам объект и добавляем его историю в обновлений
         ans = await self.pg.fetchrow(
-            units_table.select().where(units_table.c.shop_unit_id == self.shop_unit_id))
+            units_table.select().where(units_table.c.uid == self.uid))
         ans = ans and dict(ans)
         if ans is None:
             raise HTTPNotFound()
         del ans['date']
-        ans['stats'] = [{'update_date': datetime_to_str(update_date), 'price': price} for price, update_date in prices]
-        ans['price'] = ans['stats'][-1]['price'] if ans['stats'] else None
+        ans['stats'] = [{'update_date': datetime_to_str(update_date), 'size': size} for size, update_date in sizes]
+        ans['size'] = ans['stats'][-1]['size'] if ans['stats'] else None
 
         return Response(body=await edit_json_to_answer(ans))

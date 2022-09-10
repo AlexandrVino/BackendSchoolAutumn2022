@@ -8,7 +8,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-API_BASEURL = "http://localhost:8080"
+API_BASEURL = "http://localhost:80"
 
 ROOT_ID = "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1"
 
@@ -239,6 +239,7 @@ def test_updates():
         "date": "2022-02-04T00:00:00Z"
     })
     status, response = request(f"/updates?{params}", json_response=True)
+    print(response)
     assert status == 200, f"Expected HTTP status code 200, got {status}"
     print("Test updates passed.")
 
@@ -250,6 +251,7 @@ def test_history():
     })
     status, response = request(
         f"/node/{ROOT_ID}/history?{params}", json_response=True)
+    print(response)
     assert status == 200, f"Expected HTTP status code 200, got {status}"
     print("Test stats passed.")
 
@@ -272,7 +274,7 @@ def test_all():
     test_nodes()
     test_updates()
     test_history()
-    test_delete()
+    # test_delete()
 
 
 def main():

@@ -6,12 +6,13 @@ convention = {
     'all_column_names': lambda constraint, table: '_'.join([
         column.name for column in constraint.columns.values()
     ]),
-    'ix': 'ix__%(table_name)s__%(all_column_names)s',  # Именование индексов
-    'uq': 'uq__%(table_name)s__%(all_column_names)s',  # Именование уникальных индексов
-    'ck': 'ck__%(table_name)s__%(constraint_name)s',  # Именование CHECK-constraint-ов
-    'fk': 'fk__%(table_name)s__%(all_column_names)s__%(referred_table_name)s',  # Именование внешних ключей
-    'pk': 'pk__%(table_name)s'  # Именование первичных ключей
+    'ix': 'ix__%(table_name)s__%(all_column_names)s',
+    'uq': 'uq__%(table_name)s__%(all_column_names)s',
+    'ck': 'ck__%(table_name)s__%(constraint_name)s',
+    'fk': 'fk__%(table_name)s__%(all_column_names)s__%(referred_table_name)s',
+    'pk': 'pk__%(table_name)s'
 }
+
 metadata = MetaData(naming_convention=convention)
 
 
@@ -25,22 +26,22 @@ units_table = Table(
     'units',
     metadata,
 
-    Column('uid', String, primary_key=True),
-    Column('url', String, nullable=False),
+    Column('uid', String, primary_key=True, nullable=False),
+    Column('url', String, nullable=True),
     Column('date', DateTime, nullable=False),
     Column('type', PgEnum(DiskType, name='type'), nullable=False),
     Column('size', Integer, nullable=True),
-    Column('parentId', String, nullable=True),
+    Column('parent_id', String, nullable=True),
 )
 
 relations_table = Table(
     'relations',
     metadata,
 
-    Column('relationId', String, primary_key=True),
-    Column('childrenId', String, primary_key=True),
+    Column('relation_id', String, primary_key=True, nullable=False),
+    Column('children_id', String, primary_key=True, nullable=False),
 
-    UniqueConstraint('relationId', 'childrenId', name='uix_pair_children_parent')
+    UniqueConstraint('relation_id', 'children_id', name='uix_pair_children_parent')
 )
 
 history_table = Table(

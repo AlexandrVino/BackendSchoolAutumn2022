@@ -13,7 +13,7 @@ from sqlalchemy import create_engine
 
 CENSORED = '***'
 
-dotenv_path = f'{os.getcwd()}/disk/.env'
+dotenv_path = f'{os.getcwd()}/.env'
 if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path)
 
