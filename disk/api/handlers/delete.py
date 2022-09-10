@@ -4,8 +4,8 @@ from aiohttp.web_exceptions import HTTPNotFound
 from aiohttp.web_response import Response
 from aiohttp_apispec import docs
 
-from market.api.utils import get_item_tree, SQL_REQUESTS
-from market.api.handlers.base import BaseImportView
+from disk.api.utils import get_item_tree, SQL_REQUESTS
+from disk.api.handlers.base import BaseImportView
 
 
 class DeleteView(BaseImportView):

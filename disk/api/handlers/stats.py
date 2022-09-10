@@ -6,9 +6,9 @@ from aiohttp.web_response import Response
 from aiohttp_apispec import docs
 from sqlalchemy import and_, select
 
-from market.db.schema import history_table, shop_units_table
-from market.api.utils import datetime_to_str, edit_json_to_answer, str_to_datetime
-from market.api.handlers.base import BaseImportView
+from disk.db.schema import history_table, units_table
+from disk.api.utils import datetime_to_str, edit_json_to_answer, str_to_datetime
+from disk.api.handlers.base import BaseImportView
 
 
 class StatsView(BaseImportView):
@@ -43,7 +43,7 @@ class StatsView(BaseImportView):
 
         # получаем сам объект и добавляем его историю в обновлений
         ans = await self.pg.fetchrow(
-            shop_units_table.select().where(shop_units_table.c.shop_unit_id == self.shop_unit_id))
+            units_table.select().where(units_table.c.shop_unit_id == self.shop_unit_id))
         ans = ans and dict(ans)
         if ans is None:
             raise HTTPNotFound()

@@ -1,7 +1,7 @@
 from aiohttp.web_response import Response
 from aiohttp_apispec import docs
 
-from market.api.handlers.base import BaseImportView
+from disk.api.handlers.base import BaseImportView
 
 
 class NodeView(BaseImportView):

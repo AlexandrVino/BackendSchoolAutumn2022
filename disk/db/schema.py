@@ -16,19 +16,19 @@ metadata = MetaData(naming_convention=convention)
 
 
 @unique
-class ShopUnitType(Enum):
-    category = 'CATEGORY'
-    offer = 'OFFER'
+class DiskType(Enum):
+    file = 'FILE'
+    folder = 'FOLDER'
 
 
-shop_units_table = Table(
-    'shop_units',
+units_table = Table(
+    'units',
     metadata,
 
     Column('uid', String, primary_key=True),
-    Column('url', String, nullable=False, index=True),
+    Column('url', String, nullable=False),
     Column('date', DateTime, nullable=False),
-    Column('type', PgEnum(ShopUnitType, name='type'), nullable=False),
+    Column('type', PgEnum(DiskType, name='type'), nullable=False),
     Column('size', Integer, nullable=True),
     Column('parentId', String, nullable=True),
 )

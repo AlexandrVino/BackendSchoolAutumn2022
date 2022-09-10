@@ -12,8 +12,7 @@
    динамикой и историей.
 
 # Запуск проекта (сборка) #
-
-Скопируйте репозиторий <code>git clone https://github.com/AlexandrVino/BackendSchool.git</code> 
+Скопируйте репозиторий <code>git clone https://github.com/AlexandrVino/BackendSchoolAutumn2022.git </code> 
 
 В моем решении реализованы 2-а метода запуска/сборки проекта:
 
@@ -36,7 +35,7 @@
 3. Через запуск непосредственно через python:
     * Создаем бд (Например, через приложение [PGAdmin](https://www.pgadmin.org/))
     * Заполните <code>.env</code> файл по примеру .env.dist (данные для бд)
-    * <code> python market/db/__main__.py upgrade head </code> (<code>market-db upgrade head</code> для ленивых) - применяем миграции 
+    * <code> python disk/db/__main__.py upgrade head </code> (<code>disk-db upgrade head</code> для ленивых) - применяем миграции 
     * <code> python main.py </code> - запускаем проект
     * <code> python tests/unit_test.py </code> - запускаем тесты
    

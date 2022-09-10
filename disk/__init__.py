@@ -10,7 +10,6 @@ __email__ = 'alexander-vin0@yandex.ru'
 __license__ = 'MIT'
 __version__ = '0.0.1'
 
-
 __db_host__ = '172.17.0.0'
 __db_name__ = 'MarketDB'
 __db_pass__ = '123Qwerty123'

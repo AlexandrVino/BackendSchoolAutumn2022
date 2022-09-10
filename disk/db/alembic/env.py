@@ -2,17 +2,17 @@ import os
 
 from logging.config import fileConfig
 
+from dotenv import load_dotenv
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
 
-from market.db import schema
 
-from dotenv import load_dotenv
+from disk.db import schema
 
 
-dotenv_path = os.path.join('.env')
+dotenv_path = f'{os.getcwd()}/.env'
 if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path)
 

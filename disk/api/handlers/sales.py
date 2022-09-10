@@ -7,9 +7,9 @@ from aiohttp.web_response import Response
 from aiohttp_apispec import docs
 from sqlalchemy import and_, select
 
-from market.db.schema import history_table, shop_units_table
-from market.api.utils import datetime_to_str, edit_json_to_answer, str_to_datetime
-from market.api.handlers.base import BaseImportView
+from disk.db.schema import history_table, units_table
+from disk.api.utils import datetime_to_str, edit_json_to_answer, str_to_datetime
+from disk.api.handlers.base import BaseImportView
 
 
 class SalesView(BaseImportView):
@@ -27,10 +27,10 @@ class SalesView(BaseImportView):
         except (ValueError, KeyError):
             return Response(status=HTTPStatus.BAD_REQUEST)
 
-        sql_request = shop_units_table.select().where(
+        sql_request = units_table.select().where(
             and_(
-                shop_units_table.c.type == 'offer',
-                shop_units_table.c.shop_unit_id.in_(
+                units_table.c.type == 'offer',
+                units_table.c.shop_unit_id.in_(
                     select(history_table.c.shop_unit_id).where(
                         and_(
                             history_table.c.update_date >= date - timedelta(days=1),

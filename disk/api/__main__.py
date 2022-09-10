@@ -2,9 +2,9 @@ import os
 import os.path
 from sys import argv, path
 
-from market.api.app import create_app, MAX_REQUEST_SIZE
-from market.utils.argparse import clear_environ, positive_int
-from market.utils.pg import DEFAULT_PG_URL
+from disk.api.app import create_app, MAX_REQUEST_SIZE
+from disk.utils.argparse import clear_environ, positive_int
+from disk.utils.pg import DEFAULT_PG_URL
 
 from aiohttp.web import run_app
 from aiomisc import bind_socket

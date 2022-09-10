@@ -2,7 +2,7 @@ from marshmallow import Schema, validates_schema, ValidationError
 from marshmallow.fields import Dict, Int, Nested, Str
 from marshmallow.validate import Length
 
-from market.api.validators import validate_all_items
+from disk.api.validators import validate_all_items
 
 
 class ShopUnitSchema(Schema):

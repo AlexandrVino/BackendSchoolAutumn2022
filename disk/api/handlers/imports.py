@@ -8,12 +8,12 @@ from aiomisc import chunk_list
 from asyncpg import Connection
 from sqlalchemy.dialects.postgresql import insert
 
-from market.api.handlers.base import BaseView
-from market.api.schema import ImportSchema
-from market.api.utils import add_history, SQL_REQUESTS, str_to_datetime, update_parent_branch_date
-from market.api.validators import validate_all_items
-from market.db.schema import relations_table, shop_units_table
-from market.utils.pg import MAX_QUERY_ARGS
+from disk.api.handlers.base import BaseView
+from disk.api.schema import ImportSchema
+from disk.api.utils import add_history, SQL_REQUESTS, str_to_datetime, update_parent_branch_date
+from disk.api.validators import validate_all_items
+from disk.db.schema import relations_table, units_table
+from disk.utils.pg import MAX_QUERY_ARGS
 
 log = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class ImportsView(BaseView):
     # Максимальное кол-во строк для вставки можно рассчитать как отношение
     # MAX_QUERY_ARGS к кол-ву вставляемых в таблицу столбцов.
 
-    MAX_CITIZENS_PER_INSERT = MAX_QUERY_ARGS // len(shop_units_table.columns)
+    MAX_CITIZENS_PER_INSERT = MAX_QUERY_ARGS // len(units_table.columns)
     MAX_RELATIONS_PER_INSERT = MAX_QUERY_ARGS // len(relations_table.columns)
     all_insert_data = None
     need_to_update_date = None
@@ -120,9 +120,9 @@ class ImportsView(BaseView):
                 self.need_to_add_history.append((data['shop_unit_id'], data['date']))
 
         # добавляем объекты, которых еще нет в бд
-        insert_query = insert(shop_units_table).values(list(all_objects.values())).on_conflict_do_update(
+        insert_query = insert(units_table).values(list(all_objects.values())).on_conflict_do_update(
             index_elements=['shop_unit_id'],
-            set_=shop_units_table.columns
+            set_=units_table.columns
         )
         insert_query.parameters = []
 
