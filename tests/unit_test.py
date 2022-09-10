@@ -161,6 +161,64 @@ EXPECTED_TREE = {
     ]
 }
 
+EXPECTED_UPDATES_TREE = {
+    'items': [
+        {
+            'id': '98883e8f-0507-482f-bce2-2fb306cf6483',
+            'url': '/file/url3',
+            'date': '2022-02-03T12:00:00Z',
+            'type': 'FILE',
+            'size': 512,
+            'parentId': '1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2'
+        },
+        {
+            'id': '74b81fda-9cdc-4b63-8927-c978afed5cf4',
+            'url': '/file/url4',
+            'date': '2022-02-03T12:00:00Z',
+            'type': 'FILE',
+            'size': 1024,
+            'parentId': '1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2'
+        },
+        {
+            'id': '73bc3b36-02d1-4245-ab35-3106c9ee1c65',
+            'url': '/file/url5',
+            'date': '2022-02-03T15:00:00Z',
+            'type': 'FILE',
+            'size': 64,
+            'parentId': '1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2'
+        }
+    ]
+}
+
+EXPECTED_HISTORY_TREE = {
+    'items': [
+        {
+            'date': '2022-02-02T12:00:00Z',
+            'size': 384,
+            'id': '069cb8d7-bbdd-47d3-ad8f-82ef4c269df1',
+            'url': None,
+            'type': 'FOLDER',
+            'parentId': None
+        },
+        {
+            'date': '2022-02-03T12:00:00Z',
+            'size': 1920,
+            'id': '069cb8d7-bbdd-47d3-ad8f-82ef4c269df1',
+            'url': None,
+            'type': 'FOLDER',
+            'parentId': None
+        },
+        {
+            'date': '2022-02-03T15:00:00Z',
+            'size': 1984,
+            'id': '069cb8d7-bbdd-47d3-ad8f-82ef4c269df1',
+            'url': None,
+            'type': 'FOLDER',
+            'parentId': None
+        }
+    ]
+}
+
 
 def request(path, method="GET", data=None, json_response=False):
     try:
@@ -239,19 +297,19 @@ def test_updates():
         "date": "2022-02-04T00:00:00Z"
     })
     status, response = request(f"/updates?{params}", json_response=True)
-    print(response)
+
     assert status == 200, f"Expected HTTP status code 200, got {status}"
     print("Test updates passed.")
 
 
 def test_history():
     params = urllib.parse.urlencode({
-        "dateStart": "2022-02-01T00:00:00Z",
-        "dateEnd": "2022-02-03T00:00:00Z"
+        "dateStart": "2022-02-02T12:00:00Z",
+        "dateEnd": "2022-02-03T15:00:01Z"
     })
     status, response = request(
         f"/node/{ROOT_ID}/history?{params}", json_response=True)
-    print(response)
+
     assert status == 200, f"Expected HTTP status code 200, got {status}"
     print("Test stats passed.")
 

@@ -24,28 +24,35 @@ class StatsView(BaseImportView):
         try:
             date_end = str_to_datetime(self.kwargs['dateEnd'][0])
             date_start = str_to_datetime(self.kwargs['dateStart'][0])
-        except (ValueError, KeyError):
+        except (ValueError, KeyError) as err:
             return Response(status=HTTPStatus.BAD_REQUEST)
 
         # sql получения истории обновления цены товара/категории
         sql_request = select(history_table).where(
             and_(
                 date_start <= history_table.c.update_date,
-                history_table.c.update_date <= date_end,
+                history_table.c.update_date < date_end,
                 history_table.c.uid == self.uid
             )
         )
 
         sizes = [[record.get('size'), record.get('update_date')] for record in await self.pg.fetch(sql_request)]
-
+        print(sizes)
         # получаем сам объект и добавляем его историю в обновлений
-        ans = await self.pg.fetchrow(
-            units_table.select().where(units_table.c.uid == self.uid))
+        ans = await self.pg.fetchrow(units_table.select().where(units_table.c.uid == self.uid))
+
         ans = ans and dict(ans)
         if ans is None:
             raise HTTPNotFound()
-        del ans['date']
-        ans['stats'] = [{'update_date': datetime_to_str(update_date), 'size': size} for size, update_date in sizes]
-        ans['size'] = ans['stats'][-1]['size'] if ans['stats'] else None
 
-        return Response(body=await edit_json_to_answer(ans))
+        del ans['date']
+        del ans['size']
+
+        answer = {
+            'items': [
+                {'date': datetime_to_str(update_date), 'size': size} | ans
+                for size, update_date in sizes
+            ]
+        }
+
+        return Response(body=await edit_json_to_answer(answer))

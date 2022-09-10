@@ -42,7 +42,7 @@ class SalesView(BaseImportView):
             )
         )
 
-        data = list(map(dict, await self.pg.fetch(sql_request)))
-        for record in data:
+        data = {'items': list(map(dict, await self.pg.fetch(sql_request)))}
+        for record in data['items']:
             record['date'] = datetime_to_str(record['date'])
         return Response(body=dumps(await edit_json_to_answer(data)))
