@@ -6,9 +6,7 @@ def validate_folder(kwargs):
     Функция проверки категорий на валидность
     """
 
-    keys = [
-        ('uid', (1,)), ('date', (1,)), ('parentId', (0, 1)), ('type', (1,)), ('size', (0,))
-    ]
+    keys = [('uid', (1,)), ('date', (1,)), ('parentId', (0, 1)), ('type', (1,)), ('size', (0,))]
     for key, value in keys:
         assert bool(kwargs.get(key)) in value, 'Validation failed'
 
@@ -21,9 +19,7 @@ def validate_file(kwargs):
     Функция проверки товаров на валидность
     """
 
-    keys = [
-        ('uid', (1,)), ('url', (1,)), ('date', (1,)), ('parentId', (0, 1)), ('type', (1,)), ('size', (1,))
-    ]
+    keys = [('uid', (1,)), ('url', (1,)), ('date', (1,)), ('parentId', (0, 1)), ('type', (1,)), ('size', (1,))]
     for key, value in keys:
         if key == 'price':
             assert kwargs.get(key) >= 0, 'Validation failed'
@@ -38,10 +34,7 @@ def validate_all_items(items: iter):
     Функция проверки категорий и товаров на валидность
     """
 
-    funcs = {
-        'folder': validate_folder,
-        'file': validate_file,
-    }
+    funcs = {'folder': validate_folder, 'file': validate_file}
 
     for item in items:
         funcs[item[0]['type']](item[0])

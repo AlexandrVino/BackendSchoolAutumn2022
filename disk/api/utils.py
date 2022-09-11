@@ -305,7 +305,7 @@ def str_to_datetime(date: str) -> datetime:
 
     Функция перевода строки в datetime объект
     """
-
+    print(date)
     return datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ")
 
 

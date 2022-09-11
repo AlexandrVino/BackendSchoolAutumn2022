@@ -7,6 +7,7 @@ from aiohttp.web_response import Response
 from aiohttp_apispec import docs
 from sqlalchemy import and_, select
 
+from disk.api.responses import bad_response, ok_response
 from disk.db.schema import history_table, units_table
 from disk.api.utils import datetime_to_str, edit_json_to_answer, str_to_datetime
 from disk.api.handlers.base import BaseImportView
@@ -25,8 +26,8 @@ class SalesView(BaseImportView):
         try:
             date = str_to_datetime(self.kwargs['date'][0])
 
-        except (ValueError, KeyError):
-            return Response(status=HTTPStatus.BAD_REQUEST)
+        except (ValueError, KeyError) as err:
+            return bad_response(description=err)
 
         sql_request = units_table.select().where(
             and_(
@@ -45,4 +46,5 @@ class SalesView(BaseImportView):
         data = {'items': list(map(dict, await self.pg.fetch(sql_request)))}
         for record in data['items']:
             record['date'] = datetime_to_str(record['date'])
-        return Response(body=dumps(await edit_json_to_answer(data)))
+
+        return ok_response(body=await edit_json_to_answer(data))

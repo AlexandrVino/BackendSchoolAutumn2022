@@ -6,6 +6,7 @@ from aiohttp.web_response import Response
 from aiohttp_apispec import docs
 from sqlalchemy import and_, select
 
+from disk.api.responses import bad_response, not_found_response, ok_response
 from disk.db.schema import history_table, units_table
 from disk.api.utils import datetime_to_str, edit_json_to_answer, str_to_datetime
 from disk.api.handlers.base import BaseImportView
@@ -25,7 +26,7 @@ class StatsView(BaseImportView):
             date_end = str_to_datetime(self.kwargs['dateEnd'][0])
             date_start = str_to_datetime(self.kwargs['dateStart'][0])
         except (ValueError, KeyError) as err:
-            return Response(status=HTTPStatus.BAD_REQUEST)
+            return bad_response(description=err)
 
         # sql получения истории обновления цены товара/категории
         sql_request = select(history_table).where(
@@ -37,13 +38,13 @@ class StatsView(BaseImportView):
         )
 
         sizes = [[record.get('size'), record.get('update_date')] for record in await self.pg.fetch(sql_request)]
-        print(sizes)
+
         # получаем сам объект и добавляем его историю в обновлений
         ans = await self.pg.fetchrow(units_table.select().where(units_table.c.uid == self.uid))
 
         ans = ans and dict(ans)
         if ans is None:
-            raise HTTPNotFound()
+            return not_found_response()
 
         del ans['date']
         del ans['size']
@@ -55,4 +56,4 @@ class StatsView(BaseImportView):
             ]
         }
 
-        return Response(body=await edit_json_to_answer(answer))
+        return ok_response(body=await edit_json_to_answer(answer))

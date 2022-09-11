@@ -9,7 +9,7 @@ from asyncpg import Connection
 from sqlalchemy.dialects.postgresql import insert
 
 from disk.api.handlers.base import BaseView
-from disk.api.schema import ImportSchema
+from disk.api.responses import bad_response, ok_response
 from disk.api.utils import add_history, SQL_REQUESTS, str_to_datetime, update_parent_branch_date
 from disk.api.validators import validate_all_items
 from disk.db.schema import relations_table, units_table
@@ -127,8 +127,7 @@ class ImportsView(BaseView):
             insert_query.parameters = []
             await conn.execute(insert_query)
 
-    @docs(summary='Добавить выгрузку с информацией о товарах/категориях')
-    @request_schema(ImportSchema())
+    @docs(summary='Добавить выгрузку с информацией о файлах/папках')
     async def post(self) -> Response:
         """
         :return: Response
@@ -170,9 +169,7 @@ class ImportsView(BaseView):
             for children_id, date in self.need_to_add_history:
                 await add_history(children_id, self.pg, date, {})
 
-            return Response(status=HTTPStatus.OK)
+            return ok_response()
+
         except (AssertionError, ValueError) as err:
-
-            print(err, type(err))
-
-            return Response(body=str(err), status=HTTPStatus.BAD_REQUEST)
+            return bad_response(description=str(err))

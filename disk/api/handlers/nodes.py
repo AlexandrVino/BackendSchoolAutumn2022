@@ -2,6 +2,7 @@ from aiohttp.web_response import Response
 from aiohttp_apispec import docs
 
 from disk.api.handlers.base import BaseImportView
+from disk.api.responses import ok_response
 
 
 class NodeView(BaseImportView):
@@ -15,4 +16,4 @@ class NodeView(BaseImportView):
         """
 
         unit = await self.get_obj_tree()
-        return Response(body=unit)
+        return ok_response(body=unit)
