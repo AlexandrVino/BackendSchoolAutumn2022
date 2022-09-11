@@ -1,5 +1,5 @@
 # encoding=utf8
-
+import datetime
 import json
 import re
 import subprocess
@@ -85,6 +85,45 @@ IMPORT_BATCHES = [
     }
 ]
 
+INCORRECT_IMPORT_BATCHES = [
+    {
+        "items": [
+            {
+                "type": "FOLDER",
+                "id": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
+                "parentId": "069cb8d7-bbddaaa-47d2343-ad8f-82ef4c269df1",
+            },
+            {
+                "type": "FILE333",
+                "url": "/file/url1",
+                "id": "863e1a7a-1304-42ae-943b-179184c077e3",
+                "parentId": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
+                "size": 128
+            },
+            {
+                "type": "FILE",
+                "url": "/file/url2",
+                "id": "b1d8fd7d-2ae3-47d5-b2f9-0f094af800d4",
+                "parentId": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
+                "size": -500
+            }
+        ],
+        "updateDate": "2022-02-02T12:00:00Z"
+    },
+    {
+        "items": [
+            {
+                "type": "FILE",
+                "url": "/file/url5",
+                "id": "73bc3b36-02d1-4245-ab35-3106c9ee1c65",
+                "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
+                "size": 64
+            }
+        ],
+        "updateDate": ""
+    }
+]
+
 EXPECTED_TREE = {
     "type": "FOLDER",
     "id": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
@@ -162,33 +201,34 @@ EXPECTED_TREE = {
 }
 
 EXPECTED_UPDATES_TREE = {
-    'items': [
-        {
-            'id': '98883e8f-0507-482f-bce2-2fb306cf6483',
-            'url': '/file/url3',
-            'date': '2022-02-03T12:00:00Z',
-            'type': 'FILE',
-            'size': 512,
-            'parentId': '1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2'
-        },
-        {
-            'id': '74b81fda-9cdc-4b63-8927-c978afed5cf4',
-            'url': '/file/url4',
-            'date': '2022-02-03T12:00:00Z',
-            'type': 'FILE',
-            'size': 1024,
-            'parentId': '1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2'
-        },
-        {
-            'id': '73bc3b36-02d1-4245-ab35-3106c9ee1c65',
-            'url': '/file/url5',
-            'date': '2022-02-03T15:00:00Z',
-            'type': 'FILE',
-            'size': 64,
-            'parentId': '1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2'
-        }
-    ]
+  "items": [
+    {
+      "date": "2022-02-03T15:00:00Z",
+      "id": "73bc3b36-02d1-4245-ab35-3106c9ee1c65",
+      "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
+      "size": 64,
+      "type": "FILE",
+      "url": "/file/url5"
+    },
+    {
+      "date": "2022-02-03T12:00:00Z",
+      "id": "98883e8f-0507-482f-bce2-2fb306cf6483",
+      "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
+      "size": 512,
+      "type": "FILE",
+      "url": "/file/url3"
+    },
+    {
+      "date": "2022-02-03T12:00:00Z",
+      "id": "74b81fda-9cdc-4b63-8927-c978afed5cf4",
+      "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
+      "size": 1024,
+      "type": "FILE",
+      "url": "/file/url4"
+    }
+  ]
 }
+
 
 EXPECTED_HISTORY_TREE = {
     'items': [
@@ -229,8 +269,7 @@ def request(path, method="GET", data=None, json_response=False):
         }
 
         if data:
-            params["data"] = json.dumps(
-                data, ensure_ascii=False).encode("utf-8")
+            params["data"] = json.dumps(data, ensure_ascii=False).encode("utf-8")
             params["headers"]["Content-Length"] = len(params["data"])
             params["headers"]["Content-Type"] = "application/json"
 
@@ -240,9 +279,9 @@ def request(path, method="GET", data=None, json_response=False):
             res_data = res.read().decode("utf-8")
             if json_response:
                 res_data = json.loads(res_data)
-            return (res.getcode(), res_data)
+            return res.getcode(), res_data
     except urllib.error.HTTPError as e:
-        return (e.getcode(), None)
+        return e.getcode(), e.read().decode("utf-8")
 
 
 def deep_sort_children(node):
@@ -268,15 +307,29 @@ def print_diff(expected, response):
 
 def test_import():
     for index, batch in enumerate(IMPORT_BATCHES):
+        start = datetime.datetime.now()
         print(f"Importing batch {index}")
-        status, _ = request("/imports", method="POST", data=batch)
-
+        status, response = request("/imports", method="POST", data=batch)
+        print(f"Time {datetime.datetime.now() - start}")
         assert status == 200, f"Expected HTTP status code 200, got {status}"
 
+    print()
+    print()
+
+    for index, batch in enumerate(INCORRECT_IMPORT_BATCHES):
+        start = datetime.datetime.now()
+        print(f"Incorrect importing batch {index}")
+        status, response = request("/imports", method="POST", data=batch, json_response=True)
+        print(f"Time {datetime.datetime.now() - start}")
+        assert status == 400, f"Expected HTTP status code 400, got {status}"
+
+    print()
     print("Test import passed.")
 
 
 def test_nodes():
+    start = datetime.datetime.now()
+
     status, response = request(f"/nodes/{ROOT_ID}", json_response=True)
     # print(json.dumps(response, indent=2, ensure_ascii=False))
 
@@ -288,51 +341,87 @@ def test_nodes():
         print_diff(EXPECTED_TREE, response)
         print("Response tree doesn't match expected tree.")
         sys.exit(1)
+    print(f"Time {datetime.datetime.now() - start}")
+
+    start = datetime.datetime.now()
+    status, response = request("/nodes/asyfsdgyfysdefg7s", json_response=True)
+    assert status == 404, f"Expected HTTP status code 404, got {status}"
+    print(f"Time {datetime.datetime.now() - start}")
 
     print("Test nodes passed.")
 
 
 def test_updates():
-    params = urllib.parse.urlencode({
-        "date": "2022-02-04T00:00:00Z"
-    })
-    status, response = request(f"/updates?{params}", json_response=True)
 
+    start = datetime.datetime.now()
+    params = urllib.parse.urlencode({"date": "2022-02-04T00:00:00Z"})
+
+    status, response = request(f"/updates?{params}", json_response=True)
     assert status == 200, f"Expected HTTP status code 200, got {status}"
+
+    response['items'].sort(key=lambda x: x['id'])
+    EXPECTED_UPDATES_TREE['items'].sort(key=lambda x: x['id'])
+
+    if response != EXPECTED_UPDATES_TREE:
+        print_diff(EXPECTED_UPDATES_TREE, response)
+        print("Response tree doesn't match expected tree.")
+        sys.exit(1)
+    print(f"Time {datetime.datetime.now() - start}")
     print("Test updates passed.")
 
 
 def test_history():
-    params = urllib.parse.urlencode({
-        "dateStart": "2022-02-02T12:00:00Z",
-        "dateEnd": "2022-02-03T15:00:01Z"
-    })
-    status, response = request(
-        f"/node/{ROOT_ID}/history?{params}", json_response=True)
+
+    start = datetime.datetime.now()
+    params = urllib.parse.urlencode({"dateStart": "2022-02-02T12:00:00Z", "dateEnd": "2022-02-03T15:00:01Z"})
+    status, response = request(f"/node/{ROOT_ID}/history?{params}", json_response=True)
 
     assert status == 200, f"Expected HTTP status code 200, got {status}"
+
+    response['items'].sort(key=lambda x: x['id'])
+    EXPECTED_UPDATES_TREE['items'].sort(key=lambda x: x['id'])
+
+    if response != EXPECTED_HISTORY_TREE:
+        print_diff(EXPECTED_HISTORY_TREE, response)
+        print("Response tree doesn't match expected tree.")
+        sys.exit(1)
+
+    print(f"Time {datetime.datetime.now() - start}")
     print("Test stats passed.")
 
 
 def test_delete():
-    params = urllib.parse.urlencode({
-        "date": "2022-02-04T00:00:00Z"
-    })
-    status, _ = request(f"/delete/{ROOT_ID}?{params}", method="DELETE")
-    assert status == 200, f"Expected HTTP status code 200, got {status}"
 
-    status, _ = request(f"/nodes/{ROOT_ID}", json_response=True)
+    start = datetime.datetime.now()
+    params = urllib.parse.urlencode({"date": "2022-02-04T00:00:00Z"})
+    status, response = request(f"/delete/{ROOT_ID}?{params}", method="DELETE")
+    assert status == 200, f"Expected HTTP status code 200, got {status}"
+    print(f"Time {datetime.datetime.now() - start}")
+
+    start = datetime.datetime.now()
+    status, response = request(f"/nodes/{ROOT_ID}", json_response=True)
     assert status == 404, f"Expected HTTP status code 404, got {status}"
+    print(f"Time {datetime.datetime.now() - start}")
 
     print("Test delete passed.")
 
 
 def test_all():
     test_import()
+    print()
+    print()
     test_nodes()
+    print()
+    print()
     test_updates()
+    print()
+    print()
     test_history()
+    print()
+    print()
     test_delete()
+    print()
+    print()
 
 
 def main():

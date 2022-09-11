@@ -30,7 +30,7 @@ class DeleteView(BaseImportView):
             return bad_response(description='Incorrect parameters (you should pass id and date)')
 
         if not ides_to_req:
-            raise not_found_response()
+            return not_found_response()
 
         ides_to_req = tuple(ides_to_req)
         sql_request = SQL_REQUESTS['delete_by_ides'].format(

@@ -15,5 +15,4 @@ class NodeView(BaseImportView):
         Метод получения дерева элемента
         """
 
-        unit = await self.get_obj_tree()
-        return ok_response(body=unit)
+        return ok_response(body=await self.get_obj_tree())

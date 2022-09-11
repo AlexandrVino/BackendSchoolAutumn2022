@@ -121,6 +121,7 @@ class ImportsView(BaseView):
 
         # добавляем объекты, которых еще нет в бд
         for obj in all_objects.values():
+            print(obj)
             insert_query = insert(units_table).values(**obj).on_conflict_do_update(
                 index_elements=['uid'], set_=obj
             )
@@ -142,7 +143,7 @@ class ImportsView(BaseView):
 
                 data = await self.request.json()
 
-                assert data.get('items') and data.get('updateDate')
+                assert data.get('items') and data.get('updateDate'), "Validation Failed (items or updateDate isn't set)"
                 units = data['items']
 
                 chunked_shop_unit_rows = list(
@@ -171,5 +172,5 @@ class ImportsView(BaseView):
 
             return ok_response()
 
-        except (AssertionError, ValueError) as err:
-            return bad_response(description=str(err))
+        except (AssertionError, ValueError, KeyError) as err:
+            return bad_response(description=err)

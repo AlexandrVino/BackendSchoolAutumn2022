@@ -8,7 +8,7 @@ def validate_folder(kwargs):
 
     keys = [('uid', (1,)), ('date', (1,)), ('parentId', (0, 1)), ('type', (1,)), ('size', (0,))]
     for key, value in keys:
-        assert bool(kwargs.get(key)) in value, 'Validation failed'
+        assert bool(kwargs.get(key)) in value, f'Validation failed, {key} must be set'
 
 
 def validate_file(kwargs):
@@ -19,16 +19,22 @@ def validate_file(kwargs):
     Функция проверки товаров на валидность
     """
 
-    keys = [('uid', (1,)), ('url', (1,)), ('date', (1,)), ('parentId', (0, 1)), ('type', (1,)), ('size', (1,))]
+    keys = [
+        ('uid', (1,)), ('url', (1,)), ('date', (1,)), ('parentId', (0, 1)), ('type', ('folder', 'file')), ('size', (1,))
+    ]
+
     for key, value in keys:
-        if key == 'price':
-            assert kwargs.get(key) >= 0, 'Validation failed'
-        assert bool(kwargs.get(key)) in value, 'Validation failed'
+        if key == 'size':
+            assert kwargs.get(key) > 0, 'Validation failed, size must be positive'
+        elif key == 'type':
+            assert kwargs.get(key) in value, f"Awaited type in ('folder', 'file'), got {kwargs.get(key)}"
+        else:
+            assert bool(kwargs.get(key)) in value, f'Validation failed, {key} must be set'
 
 
-def validate_all_items(items: iter):
+def validate_all_items(chunk: iter):
     """
-    :param items: iter-объект
+    :param chunk: iter-объект
     :return: None
 
     Функция проверки категорий и товаров на валидность
@@ -36,5 +42,6 @@ def validate_all_items(items: iter):
 
     funcs = {'folder': validate_folder, 'file': validate_file}
 
-    for item in items:
-        funcs[item[0]['type']](item[0])
+    for item_group in chunk:
+        for item in item_group:
+            funcs[item['type']](item)

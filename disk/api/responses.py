@@ -9,7 +9,7 @@ def ok_response(body: dict = {}):
 
 def bad_response(description: str = ''):
     return Response(
-        body={"message": "Validation Failed"} | ({'description': description} if description else {}),
+        body={"message": "Validation Failed"} | ({'description': str(description)} if description else {}),
         status=HTTPStatus.BAD_REQUEST
     )
 
