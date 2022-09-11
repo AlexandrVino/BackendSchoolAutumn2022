@@ -12,7 +12,7 @@ from disk.api.utils import datetime_to_str, edit_json_to_answer, str_to_datetime
 from disk.api.handlers.base import BaseImportView
 
 
-class StatsView(BaseImportView):
+class HistoryView(BaseImportView):
     URL_PATH = r'/node/{uid:[\w, -]+}/history'
 
     @docs(summary='Отобразить историю изменения товара')

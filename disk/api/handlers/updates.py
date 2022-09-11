@@ -13,10 +13,10 @@ from disk.api.utils import datetime_to_str, edit_json_to_answer, str_to_datetime
 from disk.api.handlers.base import BaseImportView
 
 
-class SalesView(BaseImportView):
+class UpdatesView(BaseImportView):
     URL_PATH = r'/updates'
 
-    @docs(summary='Отобразить товары со скидкой')
+    @docs(summary='Отобразить файлы, размер которых менялся за последние 24 часа')
     async def get(self) -> Response:
         """
         :return: Response
@@ -25,7 +25,6 @@ class SalesView(BaseImportView):
 
         try:
             date = str_to_datetime(self.kwargs['date'][0])
-
         except (ValueError, KeyError) as err:
             return bad_response(description=err)
 

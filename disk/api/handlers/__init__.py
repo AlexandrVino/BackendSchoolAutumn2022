@@ -1,9 +1,9 @@
 from .delete import DeleteView
 from .nodes import NodeView
-from .sales import SalesView
+from .updates import UpdatesView
 from .imports import ImportsView
-from .stats import StatsView
+from .history import HistoryView
 
 HANDLERS = (
-    StatsView, SalesView, NodeView, ImportsView, DeleteView
+    HistoryView, UpdatesView, NodeView, ImportsView, DeleteView
 )

@@ -147,15 +147,11 @@ class ImportsView(BaseView):
                 units = data['items']
 
                 chunked_shop_unit_rows = list(
-                    chunk_list(
-                        self.make_units_table_rows(units, data['updateDate']), self.MAX_CITIZENS_PER_INSERT
-                    )
+                    chunk_list(self.make_units_table_rows(units, data['updateDate']), self.MAX_CITIZENS_PER_INSERT)
                 )
 
                 relations_rows = list(
-                    chunk_list(
-                        self.make_relations_table_rows(units), self.MAX_CITIZENS_PER_INSERT
-                    )
+                    chunk_list(self.make_relations_table_rows(units), self.MAX_CITIZENS_PER_INSERT)
                 )
 
                 validate_all_items(chunked_shop_unit_rows)
