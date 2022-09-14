@@ -21,7 +21,7 @@ services:
     image: adminer
     restart: always
     environment:
-      host: $DB_HOST
+      host: $POSTGRES_HOST
     ports:
       - 8080:8080
 
