@@ -1,6 +1,7 @@
 import os
 
 from logging.config import fileConfig
+from pathlib import Path
 
 from dotenv import load_dotenv
 from sqlalchemy import engine_from_config
@@ -10,7 +11,8 @@ from alembic import context
 
 from disk.db import schema
 
-dotenv_path = f'{os.getcwd()}/.env'
+dotenv_path = f'{Path(__file__).parent.parent.parent.parent.resolve()}/.env'
+print(dotenv_path)
 if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path)
 
