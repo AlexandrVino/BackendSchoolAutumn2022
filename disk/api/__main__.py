@@ -1,10 +1,6 @@
 import os
 import os.path
-from sys import argv, path
-
-from disk.api.app import create_app, MAX_REQUEST_SIZE
-from disk.utils.argparse import clear_environ, positive_int
-from disk.utils.pg import DEFAULT_PG_URL
+from sys import argv
 
 from aiohttp.web import run_app
 from aiomisc import bind_socket
@@ -13,6 +9,9 @@ from configargparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 from setproctitle import setproctitle
 from yarl import URL
 
+from disk.api.app import create_app, MAX_REQUEST_SIZE
+from disk.utils.argparse import clear_environ, positive_int
+from disk.utils.pg import DEFAULT_PG_URL
 
 ENV_VAR_PREFIX = 'MARKET_'
 
@@ -69,7 +68,9 @@ def main():
     clear_environ(lambda arg: arg.startswith(ENV_VAR_PREFIX))
     basic_config(args.log_level, args.log_format, buffered=True)
 
-    sock = bind_socket(address=args.api_address, port=args.api_port, proto_name='http')
+    sock = bind_socket(
+        address=args.api_address, port=args.api_port, proto_name='http'
+    )
 
     # if args.pg_user is not None:
     #     logging.info('Changing user to %r', args.pg_user.pw_name)

@@ -18,8 +18,11 @@ if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path)
 
 DEFAULT_PG_URL = create_engine(
-    f'postgresql://{os.environ.get("POSTGRES_USER")}:{os.environ.get("POSTGRES_PASSWORD")}@'
-    f'{os.environ.get("POSTGRES_HOST")}:{os.environ.get("POSTGRES_PORT")}/{os.environ.get("POSTGRES_DB")}'
+    f'postgresql://{os.environ.get("POSTGRES_USER")}:'
+    f'{os.environ.get("POSTGRES_PASSWORD")}@'
+    f'{os.environ.get("POSTGRES_HOST")}:'
+    f'{os.environ.get("POSTGRES_PORT")}/'
+    f'{os.environ.get("POSTGRES_DB")}'
 )
 
 MAX_QUERY_ARGS = 32767
@@ -40,9 +43,11 @@ class DataBaseData:
 
     @staticmethod
     async def get_from_url(url: str):
-        regex = r'postgresql:\/\/\w{1,100}:\w{1,100}@\w{1,100}:\w{1,100}\/\w{1,100}$'
+        regex = r'postgresql:\/\/\w{1,100}:\w{1,100}@' \
+                r'\w{1,100}:\w{1,100}\/\w{1,100}$'
         if not match(regex, url):
-            raise TypeError('Url should be: postgresql://user:password@host:port/database')
+            raise TypeError(
+                'Url should be: postgresql://user:password@host:port/database')
 
         url_split: list = url[url.find('://') + 3:].split('@')
 
@@ -51,7 +56,10 @@ class DataBaseData:
         database = url_split[1]
         host, port = url_split[0].split(':')
 
-        return DataBaseData(host=host, port=port, user=user, password=password, database=database)
+        return DataBaseData(
+            host=host, port=port, user=user,
+            password=password, database=database
+        )
 
     def __str__(self):
         return str(self.__dict__)

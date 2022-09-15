@@ -18,8 +18,12 @@ def main():
     config = Config(file_=options.config, ini_section=options.name,
                     cmd_opts=options)
 
-    # Подменяем путь до папки с migrations на абсолютный (требуется, чтобы migrations
-    # мог найти env.py, шаблон для генерации миграций и сами миграции)
+    # Подменяем путь до папки
+    # с migrations на абсолютный
+    # (требуется, чтобы migrations
+    # мог найти env.py, шаблон
+    # для генерации миграций и сами миграции)
+
     alembic_location = config.get_main_option('script_location')
     if not os.path.isabs(alembic_location):
         config.set_main_option('script_location',

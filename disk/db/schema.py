@@ -1,6 +1,9 @@
 from enum import Enum, unique
 
-from sqlalchemy import (Column, DateTime, Enum as PgEnum, Integer, MetaData, String, Table, UniqueConstraint)
+from sqlalchemy import (
+    Column, DateTime, Enum as PgEnum,
+    Integer, MetaData, String, Table, UniqueConstraint
+)
 
 convention = {
     'all_column_names': lambda constraint, table: '_'.join([
@@ -41,7 +44,9 @@ relations_table = Table(
     Column('relation_id', String, primary_key=True, nullable=False),
     Column('children_id', String, primary_key=True, nullable=False),
 
-    UniqueConstraint('relation_id', 'children_id', name='uix_pair_children_parent')
+    UniqueConstraint(
+        'relation_id', 'children_id', name='uix_pair_children_parent'
+    )
 )
 
 history_table = Table(

@@ -32,7 +32,9 @@ def create_app(args: Namespace) -> Application:
         log.info('Registering handler %r as %r', handler, handler.URL_PATH)
         app.router.add_route('*', handler.URL_PATH, handler)
 
-    PAYLOAD_REGISTRY.register(AsyncGenJSONListPayload, (AsyncGeneratorType, AsyncIterable))
+    PAYLOAD_REGISTRY.register(
+        AsyncGenJSONListPayload, (AsyncGeneratorType, AsyncIterable)
+    )
     PAYLOAD_REGISTRY.register(JsonPayload, (Mapping, MappingProxyType))
 
     setup_aiohttp_apispec(app=app, title='Citizens API', swagger_path='/')

@@ -17,7 +17,9 @@ def load_requirements(file_name: str) -> list:
     requirements = []
     with open(file_name, 'r') as fp:
         key_word = 'qwertyuiopasdfghjklzxcvbnm1234567890-=.\n'
-        data = ''.join(symbol for symbol in fp.read() if symbol.lower() in key_word).replace('\n\n', '\n')
+        data = ''.join(
+            symbol for symbol in fp.read() if symbol.lower() in key_word
+        ).replace('\n\n', '\n')
 
         for req in parse_requirements(data):
             extras = '[{}]'.format(','.join(req.extras)) if req.extras else ''

@@ -1,30 +1,26 @@
 import logging
-from http import HTTPStatus
 from typing import Generator
 
 from aiohttp.web_response import Response
-from aiohttp_apispec import docs, request_schema
 from aiomisc import chunk_list
 from asyncpg import Connection
 from sqlalchemy.dialects.postgresql import insert
 
 from disk.api.handlers.base import BaseView
 from disk.api.responses import bad_response, ok_response
-from disk.api.utils import add_history, SQL_REQUESTS, str_to_datetime, update_parent_branch_date
+from disk.api.utils import str_to_datetime
 from disk.api.validators import validate_all_items
 from disk.db.schema import relations_table, units_table
 from disk.utils.pg import MAX_QUERY_ARGS
+from disk.api.pg_utils import (
+    add_history, SQL_REQUESTS, update_parent_branch_date
+)
 
 log = logging.getLogger(__name__)
 
 
 class ImportsView(BaseView):
     URL_PATH = '/imports'
-    # Так как данных может быть много, а postgres поддерживает только
-    # MAX_QUERY_ARGS аргументов в одном запросе, писать в БД необходимо
-    # частями.
-    # Максимальное кол-во строк для вставки можно рассчитать как отношение
-    # MAX_QUERY_ARGS к кол-ву вставляемых в таблицу столбцов.
 
     MAX_CITIZENS_PER_INSERT = MAX_QUERY_ARGS // len(units_table.columns)
     MAX_RELATIONS_PER_INSERT = MAX_QUERY_ARGS // len(relations_table.columns)
@@ -39,7 +35,8 @@ class ImportsView(BaseView):
         :param date: дата обновления
         :return: Generator
 
-        Метод, который генерирует данные готовые для вставки в таблицу units
+        Метод, который генерирует данные готовые
+         для вставки в таблицу units
         """
 
         for unit in units:
@@ -58,7 +55,8 @@ class ImportsView(BaseView):
         :param relations: список словарей для вставки
         :return: Generator
 
-        Метод, который генерирует данные готовые для вставки в таблицу relations
+        Метод, который генерирует данные готовые
+        для вставки в таблицу relations
         """
 
         for unit in relations:
@@ -79,7 +77,9 @@ class ImportsView(BaseView):
         Метод, который вставляет данные в таблицу relations
         """
 
-        query = insert(relations_table).on_conflict_do_nothing(index_elements=['relation_id', 'children_id'])
+        query = insert(relations_table).on_conflict_do_nothing(
+            index_elements=['relation_id', 'children_id']
+        )
         query.parameters = []
 
         await conn.execute(query.values(list(chunk)))
@@ -103,16 +103,27 @@ class ImportsView(BaseView):
 
         # проверяем, что родитель есть в бд и что его тип == 'folder'
         if parents:
-            for parent in await self.pg.fetch(SQL_REQUESTS['get_by_ides'].format(tuple(parents)).replace(',)', ')')):
-                assert parent is not None and parent.get('type').lower() == 'folder', \
-                    f'Incorrect parent with id {parent.get("uid")} (Not found in db or type is FILE)'
+            request_parents = await self.pg.fetch(
+                SQL_REQUESTS['get_by_ides'].format(
+                    tuple(parents)).replace(',)', ')')
+            )
+
+            for parent in request_parents:
+                assert (
+                        parent is not None
+                        and parent.get('type').lower() == 'folder'
+                ), f'Incorrect parent with id {parent.get("uid")} ' \
+                   f'(Not found in db or type is FILE)'
 
         for data in chunk:
 
-            # т.к. при изменении/добавлении товара необходимо менять всю родительскую ветку (дату и цену)
+            # т.к. при изменении/добавлении товара
+            # необходимо менять всю родительскую ветку (дату и цену)
             # добавляю в 2 списка:
-            # первый для установления даты на дату последнего измененного объекта
-            # второй для добавления записи в таблицу истории изменений (статистики)
+            # первый для установления даты
+            # на дату последнего измененного объекта
+            # второй для добавления записи
+            # в таблицу истории изменений (статистики)
 
             if data.get('parent_id'):
                 self.need_to_update_date.append((data['uid'], data['date']))
@@ -122,13 +133,12 @@ class ImportsView(BaseView):
         # добавляем объекты, которых еще нет в бд
         for obj in all_objects.values():
             print(obj)
-            insert_query = insert(units_table).values(**obj).on_conflict_do_update(
-                index_elements=['uid'], set_=obj
-            )
+            insert_query = insert(units_table).values(
+                **obj
+            ).on_conflict_do_update(index_elements=['uid'], set_=obj)
             insert_query.parameters = []
             await conn.execute(insert_query)
 
-    @docs(summary='Добавить выгрузку с информацией о файлах/папках')
     async def post(self) -> Response:
         """
         :return: Response
@@ -143,15 +153,22 @@ class ImportsView(BaseView):
 
                 data = await self.request.json()
 
-                assert data.get('items') and data.get('updateDate'), "Validation Failed (items or updateDate isn't set)"
+                assert data.get('items') and data.get('updateDate'), \
+                    "Validation Failed (items or updateDate isn't set)"
                 units = data['items']
 
                 chunked_shop_unit_rows = list(
-                    chunk_list(self.make_units_table_rows(units, data['updateDate']), self.MAX_CITIZENS_PER_INSERT)
+                    chunk_list(self.make_units_table_rows(
+                        units, data['updateDate']),
+                        self.MAX_CITIZENS_PER_INSERT
+                    )
                 )
 
                 relations_rows = list(
-                    chunk_list(self.make_relations_table_rows(units), self.MAX_CITIZENS_PER_INSERT)
+                    chunk_list(
+                        self.make_relations_table_rows(units),
+                        self.MAX_CITIZENS_PER_INSERT
+                    )
                 )
 
                 validate_all_items(chunked_shop_unit_rows)

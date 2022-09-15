@@ -46,9 +46,11 @@ class JsonPayload(BaseJsonPayload):
     объекты asyncpg.Record и другие сущности).
     """
 
-    def __init__(self, value: Any, encoding: str = 'utf-8',
-                 content_type: str = 'application/json', dumps: JSONEncoder = dumps,
-                 *args: Any, **kwargs: Any) -> None:
+    def __init__(
+            self, value: Any, encoding: str = 'utf-8',
+            content_type: str = 'application/json',
+            dumps: JSONEncoder = dumps, *args: Any,
+            **kwargs: Any) -> None:
         super().__init__(value, encoding, content_type, dumps, *args, **kwargs)
 
 
@@ -58,14 +60,20 @@ class AsyncGenJSONListPayload(Payload):
     в JSON и отправляет клиенту.
     """
 
-    def __init__(self, value, encoding: str = 'utf-8', content_type: str = 'application/json',
-                 root_object: str = 'data', *args, **kwargs):
+    def __init__(
+            self, value, encoding: str = 'utf-8',
+            content_type: str = 'application/json',
+            root_object: str = 'data', *args, **kwargs):
         self.root_object = root_object
-        super().__init__(value, content_type=content_type, encoding=encoding, *args, **kwargs)
+        super().__init__(
+            value, content_type=content_type,
+            encoding=encoding, *args, **kwargs
+        )
 
     async def write(self, writer):
         # Начало объекта
-        await writer.write(('{"%s":[' % self.root_object).encode(self._encoding))
+        await writer.write(('{"%s":[' % self.root_object)
+                           .encode(self._encoding))
 
         first = True
         async for row in self._value:

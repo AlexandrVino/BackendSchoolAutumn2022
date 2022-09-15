@@ -10,7 +10,6 @@ import urllib.request
 
 # API_BASEURL = "http://localhost:80/"
 API_BASEURL = "https://peru-1963.usr.yandex-academy.ru"
-
 ROOT_ID = "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1"
 
 IMPORT_BATCHES = [
@@ -202,34 +201,33 @@ EXPECTED_TREE = {
 }
 
 EXPECTED_UPDATES_TREE = {
-  "items": [
-    {
-      "date": "2022-02-03T15:00:00Z",
-      "id": "73bc3b36-02d1-4245-ab35-3106c9ee1c65",
-      "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
-      "size": 64,
-      "type": "FILE",
-      "url": "/file/url5"
-    },
-    {
-      "date": "2022-02-03T12:00:00Z",
-      "id": "98883e8f-0507-482f-bce2-2fb306cf6483",
-      "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
-      "size": 512,
-      "type": "FILE",
-      "url": "/file/url3"
-    },
-    {
-      "date": "2022-02-03T12:00:00Z",
-      "id": "74b81fda-9cdc-4b63-8927-c978afed5cf4",
-      "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
-      "size": 1024,
-      "type": "FILE",
-      "url": "/file/url4"
-    }
-  ]
+    "items": [
+        {
+            "date": "2022-02-03T15:00:00Z",
+            "id": "73bc3b36-02d1-4245-ab35-3106c9ee1c65",
+            "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
+            "size": 64,
+            "type": "FILE",
+            "url": "/file/url5"
+        },
+        {
+            "date": "2022-02-03T12:00:00Z",
+            "id": "98883e8f-0507-482f-bce2-2fb306cf6483",
+            "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
+            "size": 512,
+            "type": "FILE",
+            "url": "/file/url3"
+        },
+        {
+            "date": "2022-02-03T12:00:00Z",
+            "id": "74b81fda-9cdc-4b63-8927-c978afed5cf4",
+            "parentId": "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2",
+            "size": 1024,
+            "type": "FILE",
+            "url": "/file/url4"
+        }
+    ]
 }
-
 
 EXPECTED_HISTORY_TREE = {
     'items': [
@@ -270,7 +268,8 @@ def request(path, method="GET", data=None, json_response=False):
         }
 
         if data:
-            params["data"] = json.dumps(data, ensure_ascii=False).encode("utf-8")
+            params["data"] = json.dumps(
+                data, ensure_ascii=False).encode("utf-8")
             params["headers"]["Content-Length"] = len(params["data"])
             params["headers"]["Content-Type"] = "application/json"
 
@@ -320,7 +319,9 @@ def test_import():
     for index, batch in enumerate(INCORRECT_IMPORT_BATCHES):
         start = datetime.datetime.now()
         print(f"Incorrect importing batch {index}")
-        status, response = request("/imports", method="POST", data=batch, json_response=True)
+        status, response = request(
+            "/imports", method="POST", data=batch, json_response=True
+        )
         print(f"Time {datetime.datetime.now() - start}")
         assert status == 400, f"Expected HTTP status code 400, got {status}"
 
@@ -353,7 +354,6 @@ def test_nodes():
 
 
 def test_updates():
-
     start = datetime.datetime.now()
     params = urllib.parse.urlencode({"date": "2022-02-04T00:00:00Z"})
 
@@ -368,19 +368,35 @@ def test_updates():
         print("Response tree doesn't match expected tree.")
         sys.exit(1)
     print(f"Time {datetime.datetime.now() - start}")
+
+    start = datetime.datetime.now()
+    params = urllib.parse.urlencode(
+        {"date": "2022-02-04asdasdfasfsdfT00:00:00Z"}
+    )
+
+    status, response = request(f"/updates?{params}", json_response=True)
+    assert status == 400, f"Expected HTTP status code 400, got {status}"
+
+    print(f"Time {datetime.datetime.now() - start}")
+
     print("Test updates passed.")
 
 
 def test_history():
-
     start = datetime.datetime.now()
-    params = urllib.parse.urlencode({"dateStart": "2022-02-02T12:00:00Z", "dateEnd": "2022-02-03T15:00:01Z"})
-    status, response = request(f"/node/{ROOT_ID}/history?{params}", json_response=True)
+    params = urllib.parse.urlencode({
+        "dateStart": "2022-02-02T12:00:00Z",
+        "dateEnd": "2022-02-03T15:00:01Z"
+    })
+    status, response = request(
+        f"/node/{ROOT_ID}/history?{params}",
+        json_response=True
+    )
 
     assert status == 200, f"Expected HTTP status code 200, got {status}"
 
-    response['items'].sort(key=lambda x: x['id'])
-    EXPECTED_UPDATES_TREE['items'].sort(key=lambda x: x['id'])
+    response['items'].sort(key=lambda x: x['date'])
+    EXPECTED_UPDATES_TREE['items'].sort(key=lambda x: x['date'])
 
     if response != EXPECTED_HISTORY_TREE:
         print_diff(EXPECTED_HISTORY_TREE, response)
@@ -388,11 +404,24 @@ def test_history():
         sys.exit(1)
 
     print(f"Time {datetime.datetime.now() - start}")
+
+    start = datetime.datetime.now()
+    params = urllib.parse.urlencode(
+        {"dateStart": "2022-02-02T12:00:00Z",
+         "dateEnd": "2022-02-03T15:00:01Z"}
+    )
+    status, response = request(
+        f"/node/fuhsduhgbhudifghui/history?{params}",
+        json_response=True
+    )
+
+    assert status == 404, f"Expected HTTP status code 404, got {status}"
+
+    print(f"Time {datetime.datetime.now() - start}")
     print("Test stats passed.")
 
 
 def test_delete():
-
     start = datetime.datetime.now()
     params = urllib.parse.urlencode({"date": "2022-02-04T00:00:00Z"})
     status, response = request(f"/delete/{ROOT_ID}?{params}", method="DELETE")

@@ -4,7 +4,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 from aiohttp.web_urldispatcher import View
 from asyncpgsa import PG
 
-from disk.api.utils import get_obj_tree_by_id
+from disk.api.pg_utils import get_obj_tree_by_id
 
 log = logging.getLogger(__name__)
 
@@ -18,7 +18,9 @@ class BaseView(View):
 
     @property
     def pg(self) -> PG:
-        log.debug('Registering handler %r as %r', self.request.app.keys(), type(self.request.app))
+        log.debug('Registering handler %r as %r',
+                  self.request.app.keys(),
+                  type(self.request.app))
         return self.request.app['pg']
 
     async def get_obj(self, query):
