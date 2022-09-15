@@ -24,7 +24,8 @@ class UpdatesView(BaseImportView):
         parameters=[
             {
                 'dateStart': 'dateStart', 'required': False, 'name': 'dateStart',
-                'schema': {'type': 'string', 'format': 'date-time'},
+                'type': 'string',
+                'format': 'date-time',
                 'example': "2022-05-28T21:12:01.000Z", 'in': 'query',
                 'description': 'Дата и время начала интервала, для которого считается история. '
                                'Дата должна обрабатываться согласно ISO 8601 (такой придерживается OpenAPI). '
