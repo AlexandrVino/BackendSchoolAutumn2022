@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from aiohttp.web_response import Response
+from aiohttp_apispec import docs
 from sqlalchemy import and_, select
 
 from disk.api.handlers.base import BaseImportView
@@ -14,6 +15,7 @@ from disk.db.schema import history_table, units_table
 class UpdatesView(BaseImportView):
     URL_PATH = r'/updates'
 
+    @docs(summary='Отобразить файлы, размер которых менялся за последние 24 часа')
     async def get(self) -> Response:
         """
         :return: Response

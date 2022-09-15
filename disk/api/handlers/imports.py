@@ -2,6 +2,7 @@ import logging
 from typing import Generator
 
 from aiohttp.web_response import Response
+from aiohttp_apispec import docs
 from aiomisc import chunk_list
 from asyncpg import Connection
 from sqlalchemy.dialects.postgresql import insert
@@ -139,6 +140,7 @@ class ImportsView(BaseView):
             insert_query.parameters = []
             await conn.execute(insert_query)
 
+    @docs(summary='Добавить выгрузку с информацией о файлах/папках')
     async def post(self) -> Response:
         """
         :return: Response

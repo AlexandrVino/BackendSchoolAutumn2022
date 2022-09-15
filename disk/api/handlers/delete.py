@@ -1,4 +1,5 @@
 from aiohttp.web_response import Response
+from aiohttp_apispec import docs
 
 from disk.api.handlers.base import BaseImportView
 from disk.api.responses import bad_response, not_found_response, ok_response
@@ -9,6 +10,7 @@ from disk.api.pg_utils import get_item_tree, SQL_REQUESTS
 class DeleteView(BaseImportView):
     URL_PATH = r'/delete/{uid:[\w, -]+}'
 
+    @docs(summary='Удалить объект со всеми дочерними')
     async def delete(self) -> Response:
         """
         :return: Response

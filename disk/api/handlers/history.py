@@ -1,4 +1,5 @@
 from aiohttp.web_response import Response
+from aiohttp_apispec import docs
 from sqlalchemy import and_, select
 
 from disk.api.handlers.base import BaseImportView
@@ -12,6 +13,7 @@ from disk.db.schema import history_table, units_table
 class HistoryView(BaseImportView):
     URL_PATH = r'/node/{uid:[\w, -]+}/history'
 
+    @docs(summary='Отобразить историю изменения товара')
     async def get(self) -> Response:
         """
         :return: Response
