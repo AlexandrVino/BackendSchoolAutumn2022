@@ -22,10 +22,6 @@ class HistoryView(BaseImportView):
                     '- можно получить статистику за всё время.*',
         parameters=[
             {
-                'uid': 'Идентификатор', 'required': True, 'name': 'uid', 'schema': {'type': 'string', 'format': 'id'},
-                'example': "элемент_1_1", 'in': 'path',
-            },
-            {
                 'dateStart': 'dateStart', 'required': False, 'name': 'dateStart',
                 'schema': {'type': 'string', 'format': 'date-time'},
                 'example': "2022-05-28T21:12:01.000Z", 'in': 'query',
