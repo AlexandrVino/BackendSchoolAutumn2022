@@ -15,7 +15,28 @@ from disk.db.schema import history_table, units_table
 class UpdatesView(BaseImportView):
     URL_PATH = r'/updates'
 
-    @docs(summary='Отобразить файлы, размер которых менялся за последние 24 часа')
+    @docs(
+        tags=['Additional tasks'],
+        summary='Получение списка **файлов**, которые были обновлены за последние '
+                '24 часа включительно [date - 24h, date] от времени переданном в запросе.',
+        description='''Получение списка **файлов**, которые были обновлены за последние 24 часа включительно [date - 24h, date] от времени переданном в запросе.
+        ''',
+        parameters=[
+            {
+                'dateStart': 'dateStart', 'required': False, 'name': 'dateStart',
+                'schema': {'type': 'string', 'format': 'date-time'},
+                'example': "2022-05-28T21:12:01.000Z", 'in': 'query',
+                'description': 'Дата и время начала интервала, для которого считается история. '
+                               'Дата должна обрабатываться согласно ISO 8601 (такой придерживается OpenAPI). '
+                               'Если дата не удовлетворяет данному формату, необходимо отвечать 400.',
+            },
+        ],
+        responses={
+            200: {'description': 'Список элементов, которые были обновлены.', 'content': 'application/json'},
+            400: {'description': 'Невалидная схема документа или входные данные не верны.',
+                  'content': 'application/json'},
+        }
+    )
     async def get(self) -> Response:
         """
         :return: Response

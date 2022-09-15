@@ -8,8 +8,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-# API_BASEURL = "http://localhost:80/"
-API_BASEURL = "https://peru-1963.usr.yandex-academy.ru"
+API_BASEURL = "http://localhost:80/"
+# API_BASEURL = "https://peru-1963.usr.yandex-academy.ru"
 ROOT_ID = "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1"
 
 IMPORT_BATCHES = [
@@ -418,6 +418,23 @@ def test_history():
     assert status == 404, f"Expected HTTP status code 404, got {status}"
 
     print(f"Time {datetime.datetime.now() - start}")
+
+    start = datetime.datetime.now()
+    params = urllib.parse.urlencode(
+        {
+            "dateStart": "2022-02-03T15:00:01Z",
+            "dateEnd": "2022-02-02T12:00:00Z"
+        }
+    )
+    status, response = request(
+        f"/node/{ROOT_ID}/history?{params}",
+        json_response=True
+    )
+
+    assert status == 400, f"Expected HTTP status code 400, got {status}"
+
+    print(f"Time {datetime.datetime.now() - start}")
+
     print("Test stats passed.")
 
 

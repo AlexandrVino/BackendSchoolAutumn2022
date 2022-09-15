@@ -10,7 +10,27 @@ from disk.api.pg_utils import get_item_tree, SQL_REQUESTS
 class DeleteView(BaseImportView):
     URL_PATH = r'/delete/{uid:[\w, -]+}'
 
-    @docs(summary='Удалить объект со всеми дочерними')
+    @docs(
+        tags=['Default tasks'],
+        summary='Удалить объект со всеми дочерними',
+        description='Удалить элемент по идентификатору. '
+                    'При удалении папки удаляются все дочерние элементы.'
+                    ' Доступ к истории обновлений удаленного элемента невозможен.\n\n'
+                    ' **Обратите, пожалуйста, внимание на этот обработчик.'
+                    ' При его некорректной работе тестирование может быть невозможно.**',
+        parameters=[
+            {
+                'uid': 'Идентификатор', 'required': True, 'name': 'uid', 'schema': {'type': 'string', 'format': 'id'},
+                'example': "элемент_1_1", 'in': 'path',
+            }
+        ],
+        responses={
+            200: {'description': 'Удаление прошло успешно.', 'content': 'application/json'},
+            400: {'description': 'Невалидная схема документа или входные данные не верны.',
+                  'content': 'application/json'},
+            404: {'description': 'Элемент не найден.', 'content': 'application/json'},
+        }
+    )
     async def delete(self) -> Response:
         """
         :return: Response
