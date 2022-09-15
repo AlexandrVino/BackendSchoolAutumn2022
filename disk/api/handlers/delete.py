@@ -19,10 +19,9 @@ class DeleteView(BaseImportView):
                     ' **Обратите, пожалуйста, внимание на этот обработчик.'
                     ' При его некорректной работе тестирование может быть невозможно.**',
         responses={
-            200: {'description': 'Удаление прошло успешно.', 'content': 'application/json'},
-            400: {'description': 'Невалидная схема документа или входные данные не верны.',
-                  'content': 'application/json'},
-            404: {'description': 'Элемент не найден.', 'content': 'application/json'},
+            200: {'description': 'Удаление прошло успешно.'},
+            400: {'description': 'Невалидная схема документа или входные данные не верны.'},
+            404: {'description': 'Элемент не найден.'},
         }
     )
     async def delete(self) -> Response:

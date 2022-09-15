@@ -164,9 +164,8 @@ class ImportsView(BaseView):
         ''',
 
         responses={
-            200: {'description': 'Вставка или обновление прошли успешно.', 'content': 'application/json'},
-            400: {'description': 'Невалидная схема документа или входные данные не верны.',
-                  'content': 'application/json'}
+            200: {'description': 'Вставка или обновление прошли успешно.'},
+            400: {'description': 'Невалидная схема документа или входные данные не верны.'}
         }
     )
     async def post(self) -> Response:

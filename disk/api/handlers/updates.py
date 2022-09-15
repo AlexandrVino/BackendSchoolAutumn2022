@@ -23,7 +23,7 @@ class UpdatesView(BaseImportView):
         ''',
         parameters=[
             {
-                'dateStart': 'dateStart', 'required': False, 'name': 'dateStart',
+                'required': False, 'name': 'dateStart',
                 'type': 'string',
                 'format': 'date-time',
                 'example': "2022-05-28T21:12:01.000Z", 'in': 'query',
@@ -33,9 +33,8 @@ class UpdatesView(BaseImportView):
             },
         ],
         responses={
-            200: {'description': 'Список элементов, которые были обновлены.', 'content': 'application/json'},
-            400: {'description': 'Невалидная схема документа или входные данные не верны.',
-                  'content': 'application/json'},
+            200: {'description': 'Список элементов, которые были обновлены.'},
+            400: {'description': 'Невалидная схема документа или входные данные не верны.'},
         }
     )
     async def get(self) -> Response:

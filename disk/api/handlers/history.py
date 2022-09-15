@@ -22,7 +22,7 @@ class HistoryView(BaseImportView):
                     '- можно получить статистику за всё время.*',
         parameters=[
             {
-                'dateStart': 'dateStart', 'required': False, 'name': 'dateStart',
+                'required': False, 'name': 'dateStart',
                 'type': 'string',
                 'format': 'date-time',
                 'example': "2022-05-28T21:12:01.000Z", 'in': 'query',
@@ -31,7 +31,7 @@ class HistoryView(BaseImportView):
                                'Если дата не удовлетворяет данному формату, необходимо отвечать 400.',
             },
             {
-                'dateEnd': 'dateEnd', 'required': False, 'name': 'dateEnd',
+                'required': False, 'name': 'dateEnd',
                 'type': 'string', 'format': 'date-time',
                 'description': 'Дата и время конца интервала, для которого считается история. '
                                'Дата должна обрабатываться согласно ISO 8601 (такой придерживается OpenAPI). '
@@ -41,10 +41,9 @@ class HistoryView(BaseImportView):
         ],
 
         responses={
-            200: {'description': 'История по элементу.', 'content': 'application/json'},
-            400: {'description': 'Некорректный формат запроса или некорректные даты интервала.',
-                  'content': 'application/json'},
-            404: {'description': 'Элемент не найден.', 'content': 'application/json'},
+            200: {'description': 'История по элементу.'},
+            400: {'description': 'Некорректный формат запроса или некорректные даты интервала.'},
+            404: {'description': 'Элемент не найден.'},
         }
     )
     async def get(self) -> Response:
